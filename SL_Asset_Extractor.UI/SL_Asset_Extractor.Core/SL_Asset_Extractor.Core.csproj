@@ -17,11 +17,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\" />
     <Folder Include="Database\" />
     <Folder Include="Extractor\" />
     <Folder Include="Classifier\" />
-    <Folder Include="Scanner\" />
   </ItemGroup>
 
 </Project>

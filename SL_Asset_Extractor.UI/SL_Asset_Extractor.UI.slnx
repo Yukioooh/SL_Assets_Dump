@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SL_Asset_Extractor.Core/SL_Asset_Extractor.Core.csproj" />
+  <Project Path="SL_Asset_Extractor.UI/SL_Asset_Extractor.UI.csproj" />
+</Solution>

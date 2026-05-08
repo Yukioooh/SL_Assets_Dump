@@ -83,8 +83,16 @@ namespace SL_Asset_Extractor.Core.Scanner
     public interface ILogger<T>
     {
         void LogDebug(string v1, string fileName, long v2);
+        void LogDebug(string v, string cliPath, string arguments);
+        void LogDebug(string v, string data);
         void LogError(Exception ex, string v, string fileName);
+        void LogError(string v, string cliPath);
+        void LogError(string v, int exitCode);
+        void LogError(Exception ex, string v);
         void LogInformation(string v, string directoryPath);
         void LogInformation(string v, int length);
+        void LogInformation(string v);
+        void LogWarning(string v, string data);
+        void LogWarning(string v);
     }
 }

@@ -13,6 +13,7 @@ namespace SL_Asset_Extractor.Core.Database
             _connectionString = $"Data Source={databasePath}";
             InitializeDatabase();
         }
+
         private SqliteConnection CreateConnection()
         {
             return new SqliteConnection(_connectionString);
@@ -24,43 +25,33 @@ namespace SL_Asset_Extractor.Core.Database
             connection.Open();
 
             connection.Execute(@"
-                -- Table des bundles
                 CREATE TABLE IF NOT EXISTS Bundles (
                     Id          INTEGER PRIMARY KEY AUTOINCREMENT,
                     FileName    TEXT    NOT NULL,
-                    FullPath    TEXT    NOT NULL UNIQUE,  
+                    FullPath    TEXT    NOT NULL UNIQUE,
                     Hash        TEXT    NOT NULL,
                     FileSize    INTEGER NOT NULL,
-                    LastScanned TEXT    NOT NULL          
+                    LastScanned TEXT    NOT NULL
                 );
 
-                
-                CREATE INDEX IF NOT EXISTS idx_bundles_filename 
-                ON Bundles(FileName);
+                CREATE INDEX IF NOT EXISTS idx_bundles_filename ON Bundles(FileName);
 
-                -- Table des assets
                 CREATE TABLE IF NOT EXISTS Assets (
                     Id           INTEGER PRIMARY KEY AUTOINCREMENT,
                     PathId       INTEGER NOT NULL,
                     Name         TEXT    NOT NULL,
                     Type         TEXT    NOT NULL,
                     BundleName   TEXT    NOT NULL,
-                    UniqueKey    TEXT    NOT NULL UNIQUE, -- BundleName_PathId
+                    UniqueKey    TEXT    NOT NULL UNIQUE,
                     ExportedPath TEXT,
                     Category     TEXT    NOT NULL DEFAULT 'Unclassified',
                     ExtractedAt  TEXT    NOT NULL,
                     ImageHash    TEXT
                 );
 
-                
-                CREATE INDEX IF NOT EXISTS idx_assets_uniquekey 
-                ON Assets(UniqueKey);
+                CREATE INDEX IF NOT EXISTS idx_assets_uniquekey ON Assets(UniqueKey);
+                CREATE INDEX IF NOT EXISTS idx_assets_category ON Assets(Category);
 
-                
-                CREATE INDEX IF NOT EXISTS idx_assets_category 
-                ON Assets(Category);
-
-                
                 CREATE TABLE IF NOT EXISTS ExtractionLogs (
                     Id                  INTEGER PRIMARY KEY AUTOINCREMENT,
                     StartedAt           TEXT    NOT NULL,
@@ -87,7 +78,6 @@ namespace SL_Asset_Extractor.Core.Database
         public async Task SaveBundleAsync(BundleInfo bundle)
         {
             using var connection = CreateConnection();
-
             await connection.ExecuteAsync(@"
                 INSERT INTO Bundles (FileName, FullPath, Hash, FileSize, LastScanned)
                 VALUES (@FileName, @FullPath, @Hash, @FileSize, @LastScanned)
@@ -97,23 +87,22 @@ namespace SL_Asset_Extractor.Core.Database
                     LastScanned = excluded.LastScanned",
                 bundle);
         }
+
         public async Task<bool> AssetExistsAsync(string uniqueKey)
         {
             using var connection = CreateConnection();
-
             var count = await connection.ExecuteScalarAsync<int>(
                 "SELECT COUNT(1) FROM Assets WHERE UniqueKey = @UniqueKey",
                 new { UniqueKey = uniqueKey });
-
             return count > 0;
         }
+
         public async Task SaveAssetAsync(AssetInfo asset)
         {
             using var connection = CreateConnection();
-
             await connection.ExecuteAsync(@"
                 INSERT OR IGNORE INTO Assets 
-                    (PathId, Name, Type, BundleName, UniqueKey, 
+                    (PathId, Name, Type, BundleName, UniqueKey,
                      ExportedPath, Category, ExtractedAt, ImageHash)
                 VALUES 
                     (@PathId, @Name, @Type, @BundleName, @UniqueKey,
@@ -122,12 +111,12 @@ namespace SL_Asset_Extractor.Core.Database
                 {
                     asset.PathId,
                     asset.Name,
-                    Type = asset.Type.ToString(),   
+                    Type = asset.Type.ToString(),
                     asset.BundleName,
                     asset.UniqueKey,
                     asset.ExportedPath,
                     asset.Category,
-                    ExtractedAt = asset.ExtractedAt.ToString("O"), 
+                    ExtractedAt = asset.ExtractedAt.ToString("O"),
                     asset.ImageHash
                 });
         }
@@ -135,15 +124,14 @@ namespace SL_Asset_Extractor.Core.Database
         public async Task<List<AssetInfo>> GetAssetsByCategoryAsync(string category)
         {
             using var connection = CreateConnection();
-
             var results = await connection.QueryAsync<dynamic>(
                 "SELECT * FROM Assets WHERE Category = @Category ORDER BY Name",
                 new { Category = category });
 
-            return results.Select(static r => new AssetInfo
+            return results.Select(r => new AssetInfo
             {
                 Id = (int)r.Id,
-                PathId = r.PathId.ToString(),
+                PathId = (long)r.PathId,
                 Name = (string)r.Name,
                 Type = Enum.Parse<AssetType>((string)r.Type),
                 BundleName = (string)r.BundleName,
@@ -154,11 +142,9 @@ namespace SL_Asset_Extractor.Core.Database
             }).ToList();
         }
 
-
         public async Task<int> SaveExtractionLogAsync(ExtractionLog log)
         {
             using var connection = CreateConnection();
-
             return await connection.ExecuteScalarAsync<int>(@"
                 INSERT INTO ExtractionLogs 
                     (StartedAt, BundlesScanned, NewBundles, ModifiedBundles,
@@ -182,7 +168,6 @@ namespace SL_Asset_Extractor.Core.Database
         public async Task UpdateExtractionLogAsync(ExtractionLog log)
         {
             using var connection = CreateConnection();
-
             await connection.ExecuteAsync(@"
                 UPDATE ExtractionLogs SET
                     FinishedAt           = @FinishedAt,

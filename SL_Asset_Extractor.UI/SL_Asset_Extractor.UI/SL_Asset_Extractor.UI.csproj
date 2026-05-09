@@ -21,4 +21,10 @@
     <PackageReference Include="Microsoft.Windows.Compatibility" Version="10.0.7" />
   </ItemGroup>
 
+	<ItemGroup>
+		<None Update="Tools\AssetStudioModCLI\**\*">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
 </Project>

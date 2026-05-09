@@ -1,9 +1,7 @@
-﻿// Classe les assets selon leur nom en utilisant les règles du JSON.
-
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
-namespace SLAssetExtractor.Core.Classifier
+namespace SL_Asset_Extractor.Core.Classifier
 {
 
     public class SpecialCharacterConfig

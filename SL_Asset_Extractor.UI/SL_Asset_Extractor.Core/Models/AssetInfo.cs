@@ -12,7 +12,7 @@ namespace SL_Asset_Extractor.Core.Models {
             
             public int Id { get; set; }
             // id du bundle d'origine
-            public required string PathId { get; set; }
+            public long PathId { get; set; }
             // nom de l'asset 
             public required string Name { get; set; }
             // type

@@ -30,7 +30,7 @@
             <RowDefinition Height="140"/>
         </Grid.RowDefinitions>
 
-        <!-- collonne gauche -->
+        <!-- Colonne gauche -->
         <ScrollViewer Grid.Column="0"
                       Grid.Row="0"
                       Grid.RowSpan="2"
@@ -38,7 +38,6 @@
                       VerticalScrollBarVisibility="Auto">
             <StackPanel>
 
-                
                 <GroupBox Header="Dossiers sources">
                     <StackPanel>
                         <ListBox ItemsSource="{Binding SourceFolders}"
@@ -75,7 +74,6 @@
                     </StackPanel>
                 </GroupBox>
 
-                
                 <GroupBox Header="Dossier d'export">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -94,7 +92,6 @@
                     </Grid>
                 </GroupBox>
 
-                
                 <GroupBox Header="Options">
                     <StackPanel>
                         <CheckBox Content="Texture2D"
@@ -105,7 +102,6 @@
                     </StackPanel>
                 </GroupBox>
 
-                
                 <GroupBox Header="Actions">
                     <StackPanel>
                         <Button Content="Démarrer"
@@ -118,7 +114,6 @@
                     </StackPanel>
                 </GroupBox>
 
-                
                 <GroupBox Header="Statut">
                     <StackPanel>
                         <TextBlock Text="{Binding StatusMessage}"
@@ -131,18 +126,21 @@
                         <TextBlock Text="{Binding ProgressText}"
                                    FontSize="10"
                                    Foreground="Gray"/>
+                        <TextBlock Text="{Binding TimeRemaining}"
+                                   FontSize="10"
+                                   Foreground="Gray"/>
                     </StackPanel>
                 </GroupBox>
 
             </StackPanel>
         </ScrollViewer>
 
-        <!--droite -->
+        <!-- Zone droite haute -->
         <Border Grid.Column="1"
                 Grid.Row="0"
                 Margin="0,0,0,6"/>
 
-        <!-- logs -->
+        <!-- Logs -->
         <GroupBox Grid.Column="1"
                   Grid.Row="1"
                   Header="Logs">

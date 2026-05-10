@@ -8,6 +8,7 @@ using SL_Asset_Extractor.Core.Extractor;
 using SL_Asset_Extractor.Core.Database;
 using SL_Asset_Extractor.Core.Classifier;
 using SL_Asset_Extractor.Core.Models;
+using SL_Asset_Extractor.Core.Settings;
 
 namespace SL_Asset_Extractor.UI.ViewModels
 {
@@ -26,8 +27,11 @@ namespace SL_Asset_Extractor.UI.ViewModels
         [ObservableProperty] private int _assetsExtracted = 0;
         [ObservableProperty] private int _newAssets = 0;
         [ObservableProperty] private int _skippedAssets = 0;
+        [ObservableProperty] private string _timeRemaining = "";
 
         private CancellationTokenSource? _cts;
+        private DateTime _extractionStartTime;
+        private int _bundlesProcessed = 0;
 
         private static string CliPath => Path.Combine(
             AppDomain.CurrentDomain.BaseDirectory,
@@ -44,6 +48,18 @@ namespace SL_Asset_Extractor.UI.ViewModels
             "Classifier",
             "rules.json");
 
+        private static string SettingsPath => Path.Combine(
+            AppDomain.CurrentDomain.BaseDirectory,
+            "settings.json");
+
+        private readonly SettingsService _settingsService;
+
+        public ScanViewModel()
+        {
+            _settingsService = new SettingsService(SettingsPath);
+            LoadSettings();
+        }
+
         [RelayCommand]
         private void AddSourceFolder()
         {
@@ -55,9 +71,14 @@ namespace SL_Asset_Extractor.UI.ViewModels
             if (dialog.ShowDialog() == true)
             {
                 if (!SourceFolders.Contains(dialog.FolderName))
+                {
                     SourceFolders.Add(dialog.FolderName);
+                    SaveSettings();
+                }
                 else
+                {
                     AddLog("Ce dossier est déjà dans la liste.");
+                }
             }
         }
 
@@ -65,7 +86,10 @@ namespace SL_Asset_Extractor.UI.ViewModels
         private void RemoveSourceFolder(string folder)
         {
             if (SourceFolders.Contains(folder))
+            {
                 SourceFolders.Remove(folder);
+                SaveSettings();
+            }
         }
 
         [RelayCommand]
@@ -77,7 +101,10 @@ namespace SL_Asset_Extractor.UI.ViewModels
             };
 
             if (dialog.ShowDialog() == true)
+            {
                 ExportFolder = dialog.FolderName;
+                SaveSettings();
+            }
         }
 
         [RelayCommand]
@@ -113,6 +140,7 @@ namespace SL_Asset_Extractor.UI.ViewModels
             AssetsExtracted = 0;
             NewAssets = 0;
             SkippedAssets = 0;
+            TimeRemaining = "";
             _cts = new CancellationTokenSource();
 
             var scanner = new BundleScanner();
@@ -152,7 +180,7 @@ namespace SL_Asset_Extractor.UI.ViewModels
                 }
 
                 BundlesFound = allBundles.Count;
-                AddLog($"{allBundles.Count} bundle trouvé.");
+                AddLog($"{allBundles.Count} bundle(s) trouvé(s).");
 
                 AddLog("Vérification de la base de données...");
                 StatusMessage = "Vérification...";
@@ -181,18 +209,20 @@ namespace SL_Asset_Extractor.UI.ViewModels
                     }
                 }
 
-                AddLog($"{toExtract.Count} bundle à extraire, {SkippedAssets} ignoré.");
+                AddLog($"{toExtract.Count} bundle(s) à extraire, {SkippedAssets} ignoré(s).");
 
                 if (toExtract.Count == 0)
                 {
                     AddLog("Aucun nouveau bundle détecté.");
-                    StatusMessage = "Terminé.";
+                    StatusMessage = "Terminé — aucun changement.";
                     return;
                 }
 
-                AddLog("Démarrage de l'extraction");
+                AddLog("Démarrage de l'extraction...");
                 Progress = 0;
                 ProgressMax = toExtract.Count;
+                _extractionStartTime = DateTime.Now;
+                _bundlesProcessed = 0;
 
                 for (int i = 0; i < toExtract.Count; i++)
                 {
@@ -208,19 +238,29 @@ namespace SL_Asset_Extractor.UI.ViewModels
 
                     AddLog($"Extraction : {bundle.FileName}");
 
-                    var tempOutput = Path.Combine(ExportFolder, "_temp",
-                        Path.GetFileNameWithoutExtension(bundle.FileName));
-
                     var success = await extractor.ExtractFromFolderAsync(
                         bundle.FullPath, _cts.Token);
 
                     if (success)
                     {
                         await ClassifyAndMoveAssetsAsync(
-                            tempOutput, bundle, classifier, database);
+                            ExportFolder, bundle, classifier, database);
 
                         await database.SaveBundleAsync(bundle);
                         AssetsExtracted++;
+                        _bundlesProcessed++;
+
+                        var elapsed = DateTime.Now - _extractionStartTime;
+                        var avgPerBundle = elapsed.TotalSeconds / _bundlesProcessed;
+                        var remaining = avgPerBundle * (toExtract.Count - _bundlesProcessed);
+                        var remainingSpan = TimeSpan.FromSeconds(remaining);
+
+                        UpdateUI(() =>
+                        {
+                            TimeRemaining = _bundlesProcessed < toExtract.Count
+                                ? $"Temps restant : {remainingSpan:mm\\:ss}"
+                                : "";
+                        });
                     }
                     else
                     {
@@ -247,11 +287,12 @@ namespace SL_Asset_Extractor.UI.ViewModels
                 _cts?.Dispose();
                 _cts = null;
                 ProgressText = "";
+                TimeRemaining = "";
             }
         }
 
         private async Task ClassifyAndMoveAssetsAsync(
-            string tempFolder,
+            string exportFolder,
             BundleInfo bundle,
             AssetClassifier classifier,
             DatabaseService database)
@@ -260,7 +301,7 @@ namespace SL_Asset_Extractor.UI.ViewModels
 
             foreach (var sub in subFolders)
             {
-                var folderPath = Path.Combine(tempFolder, sub);
+                var folderPath = Path.Combine(exportFolder, sub);
                 if (!Directory.Exists(folderPath)) continue;
 
                 var pngFiles = Directory.GetFiles(folderPath, "*.png");
@@ -279,7 +320,7 @@ namespace SL_Asset_Extractor.UI.ViewModels
 
                     var result = classifier.Classify(assetName);
 
-                    var destFolder = Path.Combine(ExportFolder, result.FullPath);
+                    var destFolder = Path.Combine(exportFolder, result.FullPath);
                     Directory.CreateDirectory(destFolder);
 
                     var destFile = Path.Combine(destFolder, Path.GetFileName(pngFile));
@@ -301,9 +342,6 @@ namespace SL_Asset_Extractor.UI.ViewModels
                     AddLog($"Asset : {assetName} → {result.FullPath}");
                 }
             }
-
-            if (Directory.Exists(tempFolder))
-                Directory.Delete(tempFolder, recursive: true);
         }
 
         [RelayCommand]
@@ -312,7 +350,25 @@ namespace SL_Asset_Extractor.UI.ViewModels
             _cts?.Cancel();
             StatusMessage = "Annulé";
             IsBusy = false;
+            TimeRemaining = "";
             AddLog("Extraction annulée.");
+        }
+
+        private void LoadSettings()
+        {
+            var settings = _settingsService.Load();
+            ExportFolder = settings.ExportFolder;
+            foreach (var folder in settings.SourceFolders)
+                SourceFolders.Add(folder);
+        }
+
+        private void SaveSettings()
+        {
+            _settingsService.Save(new AppSettings
+            {
+                SourceFolders = SourceFolders.ToList(),
+                ExportFolder = ExportFolder
+            });
         }
 
         private void AddLog(string message)

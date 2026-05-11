@@ -28,7 +28,7 @@ This project was built as a first C# application, using a game I genuinely enjoy
 
 ## Interface
 
-![Interface](SL_Asset_Extractor.UI\SL_Asset_Extractor.UI\Interface.png)
+![Interface](SL_Asset_Extractor.UI/SL_Asset_Extractor.UI/Interface.png)
 
 ---
 

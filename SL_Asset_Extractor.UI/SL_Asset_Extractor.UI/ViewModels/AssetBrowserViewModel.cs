@@ -19,6 +19,7 @@ namespace SL_Asset_Extractor.UI.ViewModels
     public partial class AssetBrowserViewModel : ObservableObject
     {
         private List<AssetItem> _allAssets = new();
+        private List<AssetItem> _filteredList = new();
         private string _exportFolder = "";
 
         public ObservableCollection<AssetItem> FilteredAssets { get; } = new();
@@ -34,6 +35,10 @@ namespace SL_Asset_Extractor.UI.ViewModels
         [ObservableProperty] private BitmapImage? _previewImage;
         [ObservableProperty] private int _totalAssets = 0;
         [ObservableProperty] private bool _isLoading = false;
+        [ObservableProperty] private int _currentPage = 1;
+        [ObservableProperty] private int _totalPages = 1;
+        [ObservableProperty] private string _pageInfo = "Page 1 / 1";
+        private const int PageSize = 50;
 
         partial void OnSelectedCategoryChanged(string value)
         {
@@ -190,8 +195,6 @@ namespace SL_Asset_Extractor.UI.ViewModels
 
         private void ApplyFilters()
         {
-            FilteredAssets.Clear();
-
             var filtered = _allAssets.AsEnumerable();
 
             if (SelectedCategory != "Toutes")
@@ -207,7 +210,22 @@ namespace SL_Asset_Extractor.UI.ViewModels
                 filtered = filtered.Where(a =>
                     a.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
 
-            var results = filtered.Take(200).ToList();
+            _filteredList = filtered.ToList();
+            CurrentPage = 1;
+            TotalPages = Math.Max(1, (int)Math.Ceiling(_filteredList.Count / (double)PageSize));
+            PageInfo = $"Page {CurrentPage} / {TotalPages}";
+
+            LoadCurrentPage();
+        }
+
+        private void LoadCurrentPage()
+        {
+            FilteredAssets.Clear();
+
+            var results = _filteredList
+                .Skip((CurrentPage - 1) * PageSize)
+                .Take(PageSize)
+                .ToList();
 
             Task.Run(() =>
             {
@@ -227,8 +245,30 @@ namespace SL_Asset_Extractor.UI.ViewModels
                 {
                     foreach (var asset in results)
                         FilteredAssets.Add(asset);
+
+                    PageInfo = $"Page {CurrentPage} / {TotalPages}";
                 });
             });
+        }
+
+        [RelayCommand]
+        private void NextPage()
+        {
+            if (CurrentPage < TotalPages)
+            {
+                CurrentPage++;
+                LoadCurrentPage();
+            }
+        }
+
+        [RelayCommand]
+        private void PreviousPage()
+        {
+            if (CurrentPage > 1)
+            {
+                CurrentPage--;
+                LoadCurrentPage();
+            }
         }
 
         [RelayCommand]

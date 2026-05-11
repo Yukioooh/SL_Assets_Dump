@@ -42,9 +42,11 @@ namespace SL_Asset_Extractor.Core.Classifier
         private Regex _skillPattern = null!;
         private Regex _runePattern = null!;
         private Regex _itemMaterialPattern = null!;
+        private List<string> _dynamicCharacters = new();
 
-        public AssetClassifier(string rulesJsonPath)
+        public AssetClassifier(string rulesJsonPath, List<string>? dynamicCharacters = null)
         {
+            _dynamicCharacters = dynamicCharacters ?? new List<string>();
             LoadRules(rulesJsonPath);
         }
 
@@ -56,6 +58,11 @@ namespace SL_Asset_Extractor.Core.Classifier
                 {
                     MetadataPropertyHandling = MetadataPropertyHandling.Ignore
                 }) ?? new RulesConfig();
+
+            foreach (var c in _dynamicCharacters)
+                if (!_config.Characters.Contains(c))
+                    _config.Characters.Add(c);
+
             CompilePatterns();
         }
 
@@ -78,17 +85,16 @@ namespace SL_Asset_Extractor.Core.Classifier
 
         public ClassificationResult Classify(string assetName)
         {
-            // anniv
+            //anniv
             if (assetName.StartsWith("1stAnniReport_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("1stAnniversary_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.IndexOf("1stAnniversary", StringComparison.OrdinalIgnoreCase) >= 0)
                 return R("1st Anniversary");
-
+            
             if (assetName.StartsWith("2stAnniversary", StringComparison.OrdinalIgnoreCase) ||
                 assetName.IndexOf("2ndAnniversary", StringComparison.OrdinalIgnoreCase) >= 0)
                 return R("2nd Anniversary");
-
-            // event
+            //Events
             if (assetName.StartsWith("24Halloween_", StringComparison.OrdinalIgnoreCase))
                 return R("Halloween 2024");
 
@@ -110,46 +116,44 @@ namespace SL_Asset_Extractor.Core.Classifier
                 assetName.StartsWith("2026_", StringComparison.OrdinalIgnoreCase))
                 return R("Holidays");
 
-            // AchieveMedal
+            //AchieveMedals
             if (assetName.StartsWith("AchieveMedal_", StringComparison.OrdinalIgnoreCase))
                 return R("AchieveMedal");
-
-            //Mobs 
+            
+            //Mobs
             foreach (var prefix in _config.MobPrefixes)
-            {
                 if (assetName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                     return R("Mobs");
-            }
 
-            // Artefacts
+            //Artefacts
             if (assetName.StartsWith("Artifact_", StringComparison.OrdinalIgnoreCase))
                 return R("Artifacts");
-
-            // Banners 
+            
+            //Banners
             if (assetName.StartsWith("Banner_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("banner_", StringComparison.OrdinalIgnoreCase))
                 return R("Banners");
 
-            // BG
+            //BG
             if (assetName.StartsWith("BG_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("Levelup_", StringComparison.OrdinalIgnoreCase))
                 return R("Background");
 
-            // BGM
+            //BGM
             if (assetName.StartsWith("BGM", StringComparison.OrdinalIgnoreCase))
                 return R("BGM");
 
-            // Packs
+            //Packs
             if (assetName.StartsWith("Big_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("Small_", StringComparison.OrdinalIgnoreCase))
                 return R("Packs");
 
-            // Buff
+            //Buff
             if (assetName.StartsWith("buff_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("Buff_", StringComparison.OrdinalIgnoreCase))
                 return R("Buff");
-
-            // ChaHaeV2
+            
+            //ChaHae V2
             if (assetName.StartsWith("ChaHaeIn_MM", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("ChaHaeInLegendButerrflyDress", StringComparison.OrdinalIgnoreCase))
                 return new ClassificationResult
@@ -158,22 +162,22 @@ namespace SL_Asset_Extractor.Core.Classifier
                     SubFolder = "ChaHaeIn Valkyrie"
                 };
 
-            // Core
+            //Core
             if (assetName.StartsWith("Core_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("Item_Core_", StringComparison.OrdinalIgnoreCase))
                 return R("Core");
 
-            // Currency
+            //Currency
             if (assetName.StartsWith("Currency_", StringComparison.OrdinalIgnoreCase))
                 return R("Currency");
-
-            // DG
+            
+            //DG
             if (assetName.StartsWith("DG_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("Dimensiongate_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("Item_DG_", StringComparison.OrdinalIgnoreCase))
                 return R("DimensionGate");
 
-            // Events
+            //events
             if (assetName.StartsWith("Event_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("EventNoticePopup_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("EventPack_", StringComparison.OrdinalIgnoreCase) ||
@@ -186,65 +190,68 @@ namespace SL_Asset_Extractor.Core.Classifier
                 assetName.StartsWith("EvSummer_", StringComparison.OrdinalIgnoreCase))
                 return R("Events");
 
-            // Collab Frieren
+            //Frieren Collab
             if (assetName.StartsWith("FRRCollab_", StringComparison.OrdinalIgnoreCase))
                 return R("Collab Frieren");
 
-            // Pull banners 
+            // Pull banners
             if (assetName.StartsWith("Gacha_", StringComparison.OrdinalIgnoreCase))
                 return R("Portails Invoc");
 
-            // Weapons
+            //Weapons
             if (assetName.StartsWith("GSWeapon_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("GSWeapons_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("Relic_", StringComparison.OrdinalIgnoreCase))
                 return R("Weapons");
 
-            // Icons
+            //icons
             if (assetName.StartsWith("Icon_", StringComparison.OrdinalIgnoreCase))
                 return R("Icons");
 
-            // Collab IDLE
+            //IDLE Collab
             if (assetName.StartsWith("IdleCollab1_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("IdleCollab2_", StringComparison.OrdinalIgnoreCase))
                 return R("Collab IDLE");
 
-            // Items
+            //Books
             if (assetName.StartsWith("Item_ArtifactEnchant_", StringComparison.OrdinalIgnoreCase))
                 return R("Books");
 
+            //Forge
             if (assetName.StartsWith("Item_ArtifactReforge_", StringComparison.OrdinalIgnoreCase))
                 return R("Forge");
 
+            //gems
             if (assetName.StartsWith("Item_ArtiGem_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("Item_GemGroup_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("Item_GemUpgrade_", StringComparison.OrdinalIgnoreCase))
                 return R("Gems");
 
+            //items
             if (assetName.StartsWith("Item_", StringComparison.OrdinalIgnoreCase))
                 return R("Items");
 
-            // Lobby
+            //Lobby
             if (assetName.StartsWith("Lobby_", StringComparison.OrdinalIgnoreCase))
                 return R("Lobby");
 
-            // Mission
+            //Missions
             if (assetName.StartsWith("Mission_", StringComparison.OrdinalIgnoreCase))
                 return R("Missions");
 
-            // Runes
+            //Runes
             if (assetName.StartsWith("Rune_", StringComparison.OrdinalIgnoreCase))
                 return R("Runes");
 
-            // Atlas
+            //Atlas
             if (assetName.StartsWith("sactx-", StringComparison.OrdinalIgnoreCase))
                 return R("Atlas");
 
-            // Shadows
+            //Shadows
             if (assetName.StartsWith("Shadow_", StringComparison.OrdinalIgnoreCase))
                 return R("Shadows");
 
-            // Shop
+            //Shop
             if (assetName.StartsWith("Shop_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("ShopGoods_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("ShopGoodsSlot", StringComparison.OrdinalIgnoreCase) ||
@@ -253,7 +260,7 @@ namespace SL_Asset_Extractor.Core.Classifier
                 assetName.StartsWith("ShopTab_", StringComparison.OrdinalIgnoreCase))
                 return R("Shop");
 
-            // Skins
+            //Skins
             if (assetName.StartsWith("Skin_", StringComparison.OrdinalIgnoreCase) ||
                 assetName.StartsWith("SkinSlot_", StringComparison.OrdinalIgnoreCase))
             {
@@ -272,11 +279,10 @@ namespace SL_Asset_Extractor.Core.Classifier
                 return R("Skins");
             }
 
-            // Tutorial
+            //Tutorial
             if (assetName.StartsWith("Tutorial_", StringComparison.OrdinalIgnoreCase))
                 return R("Tutorial");
 
-            // Rune SJW
             if (_runePattern.IsMatch(assetName))
                 return new ClassificationResult
                 {
@@ -285,7 +291,6 @@ namespace SL_Asset_Extractor.Core.Classifier
                     SubSubFolder = "Skills"
                 };
 
-            // Skills
             var skillMatch = _skillPattern.Match(assetName);
             if (skillMatch.Success)
             {
@@ -299,7 +304,6 @@ namespace SL_Asset_Extractor.Core.Classifier
                     };
             }
 
-            // Characters
             var charFromStart = FindCharacterFromStart(assetName);
             if (charFromStart != null)
                 return new ClassificationResult
@@ -308,7 +312,6 @@ namespace SL_Asset_Extractor.Core.Classifier
                     SubFolder = charFromStart
                 };
 
-            // Boss
             var boss = FindBoss(assetName);
             if (boss != null)
                 return new ClassificationResult
@@ -323,17 +326,32 @@ namespace SL_Asset_Extractor.Core.Classifier
         private static ClassificationResult R(string category) =>
             new ClassificationResult { Category = category };
 
-        private bool IsBanner(string assetName) =>
-            _config.BannerKeywords.Any(kw => assetName.StartsWith(kw, StringComparison.OrdinalIgnoreCase));
+        private static string NormalizeName(string name)
+        {
+            return name
+                .Replace(" ", "")
+                .Replace("-", "")
+                .Replace("_", "")
+                .ToLowerInvariant();
+        }
 
-        private string? FindCharacterFromStart(string assetName) =>
-            _config.Characters.FirstOrDefault(c => assetName.StartsWith(c, StringComparison.OrdinalIgnoreCase));
+        private string? FindCharacterFromStart(string assetName)
+        {
+            var normalizedAsset = NormalizeName(assetName);
+            return _config.Characters.FirstOrDefault(c =>
+                normalizedAsset.StartsWith(NormalizeName(c), StringComparison.OrdinalIgnoreCase));
+        }
 
-        private string? FindCharacter(string name) =>
-            _config.Characters.FirstOrDefault(c => string.Equals(c, name, StringComparison.OrdinalIgnoreCase));
+        private string? FindCharacter(string name)
+        {
+            var normalizedName = NormalizeName(name);
+            return _config.Characters.FirstOrDefault(c =>
+                string.Equals(NormalizeName(c), normalizedName, StringComparison.OrdinalIgnoreCase));
+        }
 
         private string? FindBoss(string assetName) =>
-            _config.Bosses.FirstOrDefault(b => assetName.IndexOf(b, StringComparison.OrdinalIgnoreCase) >= 0);
+            _config.Bosses.FirstOrDefault(b =>
+                assetName.IndexOf(b, StringComparison.OrdinalIgnoreCase) >= 0);
 
         public List<string> GetAllCategories() => new()
         {

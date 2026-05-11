@@ -8,9 +8,8 @@ namespace SL_Asset_Extractor.UI
         protected override void OnStartup(StartupEventArgs e)
         {
             base.OnStartup(e);
-
             var mainWindow = new MainWindow();
-            mainWindow.DataContext = new ScanViewModel();
+            mainWindow.DataContext = new MainViewModel();
             mainWindow.Show();
         }
     }

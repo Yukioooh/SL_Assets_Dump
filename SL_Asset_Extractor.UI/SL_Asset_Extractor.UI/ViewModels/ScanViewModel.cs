@@ -9,6 +9,7 @@ using SL_Asset_Extractor.Core.Database;
 using SL_Asset_Extractor.Core.Classifier;
 using SL_Asset_Extractor.Core.Models;
 using SL_Asset_Extractor.Core.Settings;
+using SL_Asset_Extractor.UI.Views;
 
 namespace SL_Asset_Extractor.UI.ViewModels
 {
@@ -16,6 +17,7 @@ namespace SL_Asset_Extractor.UI.ViewModels
     {
         public ObservableCollection<string> LogMessages { get; } = new();
         public ObservableCollection<string> SourceFolders { get; } = new();
+        public ObservableCollection<string> CharactersList { get; } = new();
 
         [ObservableProperty] private string _exportFolder = "";
         [ObservableProperty] private bool _extractTexture2D = true;
@@ -45,7 +47,6 @@ namespace SL_Asset_Extractor.UI.ViewModels
 
         private static string RulesPath => Path.Combine(
             AppDomain.CurrentDomain.BaseDirectory,
-            "Classifier",
             "rules.json");
 
         private static string SettingsPath => Path.Combine(
@@ -53,10 +54,12 @@ namespace SL_Asset_Extractor.UI.ViewModels
             "settings.json");
 
         private readonly SettingsService _settingsService;
+        private readonly RulesService _rulesService;
 
         public ScanViewModel()
         {
             _settingsService = new SettingsService(SettingsPath);
+            _rulesService = new RulesService(RulesPath);
             LoadSettings();
         }
 
@@ -104,6 +107,41 @@ namespace SL_Asset_Extractor.UI.ViewModels
             {
                 ExportFolder = dialog.FolderName;
                 SaveSettings();
+            }
+        }
+
+        [RelayCommand]
+        private void AddCharacter()
+        {
+            var dialog = new AddCharacterDialog
+            {
+                Owner = App.Current.MainWindow
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                var name = dialog.CharacterName;
+                if (!CharactersList.Contains(name))
+                {
+                    CharactersList.Add(name);
+                    _rulesService.AddCharacter(name);
+                    AddLog($"Personnage ajouté : {name}");
+                }
+                else
+                {
+                    AddLog($"Personnage déjà dans la liste : {name}");
+                }
+            }
+        }
+
+        [RelayCommand]
+        private void RemoveCharacter(string character)
+        {
+            if (CharactersList.Contains(character))
+            {
+                CharactersList.Remove(character);
+                _rulesService.RemoveCharacter(character);
+                AddLog($"Personnage supprimé : {character}");
             }
         }
 
@@ -157,27 +195,31 @@ namespace SL_Asset_Extractor.UI.ViewModels
 
                 var allBundles = new List<BundleInfo>();
 
+                void OnBundleFound(string name, int current, int total)
+                {
+                    UpdateUI(() =>
+                    {
+                        Progress = current;
+                        ProgressMax = total;
+                        ProgressText = $"{current} / {total}";
+                        StatusMessage = $"Scan : {name}";
+                    });
+                }
+
+                scanner.BundleFound += OnBundleFound;
+
                 foreach (var sourceFolder in SourceFolders)
                 {
                     _cts.Token.ThrowIfCancellationRequested();
                     AddLog($"Scan de : {sourceFolder}");
-
-                    scanner.BundleFound += (name, current, total) =>
-                    {
-                        UpdateUI(() =>
-                        {
-                            Progress = current;
-                            ProgressMax = total;
-                            ProgressText = $"{current} / {total}";
-                            StatusMessage = $"Scan : {name}";
-                        });
-                    };
 
                     var bundles = await scanner.ScanDirectoryAsync(
                         sourceFolder, _cts.Token);
 
                     allBundles.AddRange(bundles);
                 }
+
+                scanner.BundleFound -= OnBundleFound;
 
                 BundlesFound = allBundles.Count;
                 AddLog($"{allBundles.Count} bundle(s) trouvé(s).");
@@ -360,6 +402,10 @@ namespace SL_Asset_Extractor.UI.ViewModels
             ExportFolder = settings.ExportFolder;
             foreach (var folder in settings.SourceFolders)
                 SourceFolders.Add(folder);
+
+            var characters = _rulesService.GetCharacters();
+            foreach (var character in characters)
+                CharactersList.Add(character);
         }
 
         private void SaveSettings()

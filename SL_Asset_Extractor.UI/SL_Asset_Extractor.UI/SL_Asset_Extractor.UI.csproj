@@ -9,12 +9,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SL_Asset_Extractor.Core\SL_Asset_Extractor.Core.csproj" />
+    <None Remove="Resources\Img_GachaDirection_GuildIcon_1.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Resources\" />
-    <Folder Include="Views\" />
+    <ProjectReference Include="..\SL_Asset_Extractor.Core\SL_Asset_Extractor.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,4 +26,14 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+		<Content Include="..\SL_Asset_Extractor.Core\Classifier\rules.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<Link>rules.json</Link>
+		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="Resources\Img_GachaDirection_GuildIcon_1.ico" />
+	</ItemGroup>
 </Project>

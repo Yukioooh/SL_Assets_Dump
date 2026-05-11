@@ -6,7 +6,7 @@
 ![.NET](https://img.shields.io/badge/.NET-8.0-blue?style=for-the-badge)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D6?style=for-the-badge)
 ![Status](https://img.shields.io/badge/status-active-success?style=for-the-badge)
-![Header](SL_Asset_Extractor.UI\SL_Asset_Extractor.UI\header.jpg)
+![Header](SL_Asset_Extractor.UI/SL_Asset_Extractor.UI/header.jpg)
 
 ---
 

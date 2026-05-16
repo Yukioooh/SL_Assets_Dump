@@ -164,14 +164,42 @@
         <!-- Contenu principal -->
         <Grid Grid.Row="1" Margin="6">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="220"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="220" MinWidth="150"/>
+                <ColumnDefinition Width="*" MinWidth="300"/>
+                <ColumnDefinition Width="200" MinWidth="150"/>
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="140"/>
+                <RowDefinition Height="140" MinHeight="80"/>
             </Grid.RowDefinitions>
+
+            <!-- Séparateur redimensionnable gauche -->
+            <GridSplitter Grid.Column="0"
+                          Grid.RowSpan="2"
+                          Width="4"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Stretch"
+                          Background="#CCCCCC"
+                          Margin="0,0,-2,0"/>
+
+            <!-- Séparateur redimensionnable droite -->
+            <GridSplitter Grid.Column="2"
+                          Grid.RowSpan="2"
+                          Width="4"
+                          HorizontalAlignment="Left"
+                          VerticalAlignment="Stretch"
+                          Background="#CCCCCC"
+                          Margin="-2,0,0,0"/>
+
+            <!-- Séparateur horizontal bas -->
+            <GridSplitter Grid.Column="0"
+                          Grid.ColumnSpan="3"
+                          Grid.Row="1"
+                          Height="4"
+                          HorizontalAlignment="Stretch"
+                          VerticalAlignment="Top"
+                          Background="#CCCCCC"
+                          Margin="0,-2,0,0"/>
 
             <!-- Colonne gauche -->
             <ScrollViewer Grid.Column="0"
@@ -213,6 +241,7 @@
                             </ListBox>
                             <Button Content="+ Ajouter un dossier"
                                     HorizontalAlignment="Stretch"
+                                    Padding="8,6"
                                     Command="{Binding ScanVM.AddSourceFolderCommand}"/>
                         </StackPanel>
                     </GroupBox>
@@ -226,11 +255,12 @@
                             <TextBox Grid.Column="0"
                                      Text="{Binding ScanVM.ExportFolder}"
                                      IsReadOnly="True"
-                                     Padding="2,1"/>
+                                     Padding="4,6"/>
                             <Button Grid.Column="1"
                                     Content="..."
-                                    Width="24"
+                                    Width="32"
                                     MinWidth="0"
+                                    Padding="0,6"
                                     Margin="2,0,0,0"
                                     Command="{Binding ScanVM.BrowseExportFolderCommand}"/>
                         </Grid>
@@ -251,10 +281,12 @@
                             <Button Content="Démarrer"
                                     Command="{Binding ScanVM.StartExtractionCommand}"
                                     HorizontalAlignment="Stretch"
+                                    Padding="8,6"
                                     Margin="0,0,0,4"/>
                             <Button Content="Annuler"
                                     Command="{Binding ScanVM.CancelCommand}"
-                                    HorizontalAlignment="Stretch"/>
+                                    HorizontalAlignment="Stretch"
+                                    Padding="8,6"/>
                         </StackPanel>
                     </GroupBox>
 
@@ -326,7 +358,7 @@
             </ScrollViewer>
 
             <!-- Zone centrale — Visionneuse -->
-            <Grid Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Margin="0,0,6,0">
+            <Grid Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" Margin="4,0,4,0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -372,26 +404,26 @@
                                 Command="{Binding BrowserVM.RefreshCommand}"/>
 
                         <Button Content="◄"
-        MinWidth="0"
-        Width="30"
-        Margin="8,0,4,0"
-        Command="{Binding BrowserVM.PreviousPageCommand}"/>
+                                MinWidth="0"
+                                Width="30"
+                                Margin="0,0,4,0"
+                                Command="{Binding BrowserVM.PreviousPageCommand}"/>
 
                         <TextBlock Text="{Binding BrowserVM.PageInfo}"
-           VerticalAlignment="Center"
-           FontSize="10"
-           Margin="0,0,4,0"/>
+                                   VerticalAlignment="Center"
+                                   FontSize="10"
+                                   Margin="0,0,4,0"/>
 
                         <Button Content="►"
-                            MinWidth="0"
-                            Width="30"
-                            Margin="0,0,8,0"
-                            Command="{Binding BrowserVM.NextPageCommand}"/>
+                                MinWidth="0"
+                                Width="30"
+                                Margin="0,0,8,0"
+                                Command="{Binding BrowserVM.NextPageCommand}"/>
 
                         <TextBlock VerticalAlignment="Center"
                                    FontSize="10"
                                    Foreground="Gray"
-                                   Text="{Binding BrowserVM.FilteredAssets.Count, StringFormat='{}{0} assets'}"/>
+                                   Text="{Binding BrowserVM.TotalAssets, StringFormat='{}{0} assets'}"/>
                     </WrapPanel>
                 </GroupBox>
 
@@ -494,6 +526,7 @@
             <GroupBox Grid.Column="2"
                       Grid.Row="0"
                       Grid.RowSpan="2"
+                      Margin="4,0,0,0"
                       Header="Logs">
                 <ListBox ItemsSource="{Binding ScanVM.LogMessages}"
                          FontFamily="Consolas"

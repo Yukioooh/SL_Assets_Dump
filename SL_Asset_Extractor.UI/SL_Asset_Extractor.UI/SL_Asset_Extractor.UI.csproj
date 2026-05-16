@@ -38,4 +38,5 @@
 	<ItemGroup>
 	  <Resource Include="Resources\Img_GachaDirection_GuildIcon_1.ico" />
 	</ItemGroup>
+
 </Project>

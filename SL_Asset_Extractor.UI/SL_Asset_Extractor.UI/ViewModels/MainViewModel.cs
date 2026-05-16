@@ -1,8 +1,8 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.IO;
 
 namespace SL_Asset_Extractor.UI.ViewModels
 {
-    public partial class MainViewModel : ObservableObject
+    public class MainViewModel
     {
         public ScanViewModel ScanVM { get; }
         public AssetBrowserViewModel BrowserVM { get; }
